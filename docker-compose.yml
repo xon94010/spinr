@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   spinr:
-    image: xon94010/spinr:latest
+    image: xonbul/spinr:latest
     container_name: spinr
     restart: unless-stopped
     ports:
