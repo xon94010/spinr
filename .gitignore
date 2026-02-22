@@ -1,0 +1,20 @@
+# SvelteKit
+.svelte-kit/
+build/
+node_modules/
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# Credentials (never commit)
+*.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
