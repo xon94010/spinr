@@ -23,6 +23,23 @@
 
 **Race Replay** — Relive your races on a 2D map with animated rider positions. Follow any rider, scrub through the timeline, and watch the leaderboard update in real time with elevation profiles.
 
+### Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/calendar.jpg" alt="Calendar view" width="100%">
+</p>
+<p align="center"><em>Month calendar with activity cards, power zones, and weekly summaries</em></p>
+
+<p align="center">
+  <img src="docs/screenshots/charts.jpg" alt="Charts & Analytics" width="100%">
+</p>
+<p align="center"><em>Power curve, training load, fitness & form, cumulative distance, and zone breakdowns</em></p>
+
+<p align="center">
+  <img src="docs/screenshots/race-replay.jpg" alt="Race Replay" width="100%">
+</p>
+<p align="center"><em>2D race replay with animated riders, leaderboard, and elevation profile</em></p>
+
 ## Quick Start
 
 ### Docker Compose
