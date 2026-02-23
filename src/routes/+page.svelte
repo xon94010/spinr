@@ -7,6 +7,7 @@
 	import WeekView from '$lib/components/WeekView.svelte';
 	import MonthView from '$lib/components/MonthView.svelte';
 	import ChartsView from '$lib/components/ChartsView.svelte';
+	import RaceReplayView from '$lib/components/race/RaceReplayView.svelte';
 	import type { Activity, TimeInZones } from '$lib/types';
 
 	type Period = 'week' | 'month' | 'year' | 'all';
@@ -71,7 +72,7 @@
 	}
 
 	type CalendarView = 'week' | 'month';
-	type MainView = 'calendar' | 'charts';
+	type MainView = 'calendar' | 'charts' | 'race';
 
 	let username = $state('');
 	let password = $state('');
@@ -394,6 +395,22 @@
 			{loading}
 			onsubmit={fetchStats}
 		/>
+	{:else if mainView === 'race'}
+		<!-- Race Replay (full height flex layout) -->
+		<div class="max-w-6xl mx-auto">
+			<Header
+				{demoMode}
+				{mainView}
+				{calendarView}
+				{loading}
+				onRefresh={fetchStats}
+				onMainViewChange={(view) => mainView = view}
+				onCalendarViewChange={(view) => calendarView = view}
+			/>
+		</div>
+		<div class="flex-1 min-h-0" style="height: calc(100vh - 17rem);">
+			<RaceReplayView {username} {password} />
+		</div>
 	{:else}
 		<!-- Dashboard -->
 		<div class="max-w-6xl mx-auto">

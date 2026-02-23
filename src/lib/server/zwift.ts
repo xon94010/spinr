@@ -181,7 +181,7 @@ async function authenticate(username: string, password: string): Promise<void> {
 	tokenExpiry = new Date(Date.now() + (data.expires_in - 60) * 1000);
 }
 
-async function getToken(username: string, password: string): Promise<string> {
+export async function getToken(username: string, password: string): Promise<string> {
 	if (accessToken && tokenExpiry && new Date() < tokenExpiry) {
 		return accessToken;
 	}
