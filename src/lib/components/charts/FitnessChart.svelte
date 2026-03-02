@@ -125,17 +125,14 @@
 	// Current values
 	let current = $derived(pmcData[pmcData.length - 1] || { ctl: 0, atl: 0, tsb: 0 });
 
-	// Zero line position
-	let zeroY = $derived(getY(0));
-
 	// X-axis date labels
 	let dateLabels = $derived.by(() => {
 		if (displayData.length === 0) return [];
 		const count = Math.min(6, displayData.length);
 		const step = Math.floor(displayData.length / count);
 		return displayData
-			.filter((_, i) => i % step === 0 || i === displayData.length - 1)
-			.map((d, i, arr) => ({
+			.filter((_, idx) => idx % step === 0 || idx === displayData.length - 1)
+			.map((d) => ({
 				label: d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
 				x: getX(displayData.indexOf(d))
 			}));
@@ -150,7 +147,7 @@
 	{:else}
 		<svg viewBox="0 0 {width} {height}" class="w-full" style="height: 220px;">
 			<!-- Grid lines -->
-			{#each [-20, 0, 20, 40, 60, 80] as value}
+			{#each [-20, 0, 20, 40, 60, 80] as value (value)}
 				{#if value >= minY && value <= maxY}
 					{@const y = getY(value)}
 					<line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" stroke-opacity={value === 0 ? 0.3 : 0.1} />
@@ -161,7 +158,7 @@
 			{/each}
 
 			<!-- X-axis date labels -->
-			{#each dateLabels as { label, x }}
+			{#each dateLabels as { label, x } (x)}
 				<text {x} y={height - 10} text-anchor="middle" class="fill-muted-foreground text-[10px]">
 					{label}
 				</text>

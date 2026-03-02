@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import ActivityCard from './ActivityCard.svelte';
 	import type { Activity } from '$lib/types';
-	import { formatDuration, calculateLoad } from '$lib/utils';
+	import { formatDuration, calculateLoad, getWeekNumber } from '$lib/utils';
 
 	interface Props {
 		activities: Activity[];
@@ -54,14 +54,6 @@
 		return targetMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 	}
 
-	function getWeekNumber(date: Date): number {
-		const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-		const dayNum = d.getUTCDay() || 7;
-		d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-		return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-	}
-
 	function getActivitiesForDay(date: Date): Activity[] {
 		const year = date.getFullYear();
 		const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -73,22 +65,29 @@
 	let monthDays = $derived(getMonthDays(monthOffset));
 	let currentMonthName = $derived(getMonthName(monthOffset));
 
-	// Month totals (only activities in current month)
-	let monthActivities = $derived(
-		monthDays
+	let monthSummary = $derived.by(() => {
+		const acts = monthDays
 			.filter(d => d.isCurrentMonth)
-			.flatMap(d => getActivitiesForDay(d.date))
-	);
-	let monthDistance = $derived(monthActivities.reduce((sum, a) => sum + a.distance, 0));
-	let monthDuration = $derived(monthActivities.reduce((sum, a) => sum + a.duration, 0));
-	let monthElevation = $derived(monthActivities.reduce((sum, a) => sum + a.elevation, 0));
-	let monthLoad = $derived(monthActivities.reduce((sum, a) => sum + (a.tss ?? calculateLoad(a, ftp)), 0));
-	let monthCalories = $derived(monthActivities.reduce((sum, a) => sum + a.calories, 0));
-	let monthAvgPower = $derived(
-		monthDuration > 0
-			? Math.round(monthActivities.reduce((sum, a) => sum + a.avgPower * a.duration, 0) / monthDuration)
-			: 0
-	);
+			.flatMap(d => getActivitiesForDay(d.date));
+		let distance = 0, duration = 0, elevation = 0, load = 0, calories = 0, powerDuration = 0;
+		for (const a of acts) {
+			distance += a.distance;
+			duration += a.duration;
+			elevation += a.elevation;
+			load += a.tss ?? calculateLoad(a, ftp);
+			calories += a.calories;
+			powerDuration += a.avgPower * a.duration;
+		}
+		return {
+			activities: acts,
+			distance,
+			duration,
+			elevation,
+			load,
+			calories,
+			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0
+		};
+	});
 </script>
 
 <div class="overflow-x-auto">
@@ -115,35 +114,35 @@
 	</div>
 
 	<!-- Monthly Summary (Top, Centered) -->
-	{#if monthActivities.length > 0}
+	{#if monthSummary.activities.length > 0}
 		<div class="flex justify-center mb-4">
 			<div class="flex items-center gap-6 text-sm bg-secondary/30 rounded-lg px-6 py-3">
 				<div>
-					<span class="font-semibold tabular-nums">{monthActivities.length}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.activities.length}</span>
 					<span class="text-muted-foreground ml-1">rides</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{formatDuration(monthDuration)}</span>
+					<span class="font-semibold tabular-nums">{formatDuration(monthSummary.duration)}</span>
 					<span class="text-muted-foreground ml-1">time</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{monthDistance.toFixed(1)}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.distance.toFixed(1)}</span>
 					<span class="text-muted-foreground ml-1">km</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{monthElevation.toLocaleString()}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.elevation.toLocaleString()}</span>
 					<span class="text-muted-foreground ml-1">m</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{monthLoad}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.load}</span>
 					<span class="text-muted-foreground ml-1">Load</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{monthCalories.toLocaleString()}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.calories.toLocaleString()}</span>
 					<span class="text-muted-foreground ml-1">kcal</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{monthAvgPower}</span>
+					<span class="font-semibold tabular-nums">{monthSummary.avgPower}</span>
 					<span class="text-muted-foreground ml-1">w avg</span>
 				</div>
 			</div>

@@ -164,7 +164,7 @@
 	{:else}
 		<svg viewBox="0 0 {width} {height}" class="w-full" style="height: 200px;">
 			<!-- Grid lines -->
-			{#each yLabels as { value, y }}
+			{#each yLabels as { value, y } (value)}
 				<line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" stroke-opacity="0.1" />
 				<text x={padding.left - 8} {y} text-anchor="end" dominant-baseline="middle" class="fill-muted-foreground text-[10px]">
 					{value.toLocaleString()}
@@ -172,7 +172,7 @@
 			{/each}
 
 			<!-- Day labels -->
-			{#each dayLabels as { day, x }}
+			{#each dayLabels as { day, x } (day)}
 				<text {x} y={height - 10} text-anchor="middle" class="fill-muted-foreground text-[10px]">
 					{day}
 				</text>

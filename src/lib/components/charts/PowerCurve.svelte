@@ -8,7 +8,7 @@
 		peaks?: Record<string, number>;
 	}
 
-	let { activities, ftp, weight, peaks }: Props = $props();
+	let { ftp, weight, peaks }: Props = $props();
 
 	let hoveredPoint = $state<{ label: string; power: number; wpkg: string; x: number; y: number } | null>(null);
 
@@ -149,7 +149,7 @@
 			</defs>
 
 			<!-- Grid lines -->
-			{#each yTicks as tick}
+			{#each yTicks as tick (tick)}
 				{@const y = padding.top + chartHeight - ((tick - minPower) / (maxPower - minPower)) * chartHeight}
 				<line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" stroke-opacity="0.1" />
 				<text x={padding.left - 8} {y} text-anchor="end" dominant-baseline="middle" class="fill-muted-foreground text-[10px]">
@@ -158,7 +158,7 @@
 			{/each}
 
 			<!-- X-axis labels -->
-			{#each durations as d}
+			{#each durations as d (d.label)}
 				{@const x = padding.left + (Math.log10(d.seconds) / Math.log10(3600)) * chartWidth}
 				<text {x} y={height - 10} text-anchor="middle" class="fill-muted-foreground text-[10px]">
 					{d.label}
@@ -189,7 +189,7 @@
 			<path d={curvePath} fill="none" stroke="url(#powerGradient)" stroke-width="3" stroke-linecap="round" />
 
 			<!-- Data points -->
-			{#each dataPoints as point}
+			{#each dataPoints as point (point.label)}
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<g
 					class="cursor-pointer"
@@ -239,7 +239,7 @@
 
 		<!-- Legend -->
 		<div class="flex justify-center gap-6 mt-2 text-xs text-muted-foreground">
-			{#each dataPoints.slice(0, 4) as point}
+			{#each dataPoints.slice(0, 4) as point (point.label)}
 				<div>
 					<span class="font-medium text-foreground">{point.label}:</span>
 					<span class="tabular-nums">{point.power}w</span>

@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import ActivityCard from './ActivityCard.svelte';
 	import type { Activity } from '$lib/types';
-	import { formatDuration, calculateLoad } from '$lib/utils';
+	import { formatDuration, calculateLoad, getWeekDays, getWeekNumber } from '$lib/utils';
 
 	interface Props {
 		activities: Activity[];
@@ -24,32 +24,6 @@
 
 	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-	function getWeekDays(offset: number): Date[] {
-		const today = new Date();
-		const dayOfWeek = today.getDay();
-		const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-		const monday = new Date(today);
-		monday.setDate(today.getDate() + mondayOffset + (offset * 7));
-		monday.setHours(0, 0, 0, 0);
-
-		const days: Date[] = [];
-		for (let i = 0; i < 7; i++) {
-			const day = new Date(monday);
-			day.setDate(monday.getDate() + i);
-			days.push(day);
-		}
-		return days;
-	}
-
-	function getWeekNumber(date: Date): number {
-		const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-		const dayNum = d.getUTCDay() || 7;
-		d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-		return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-	}
-
 	function getActivitiesForDay(date: Date): Activity[] {
 		const year = date.getFullYear();
 		const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -62,17 +36,27 @@
 	let weekStart = $derived(weekDays[0]);
 	let weekEnd = $derived(weekDays[6]);
 
-	let weekActivities = $derived(weekDays.flatMap(d => getActivitiesForDay(d)));
-	let weekDistance = $derived(weekActivities.reduce((sum, a) => sum + a.distance, 0));
-	let weekDuration = $derived(weekActivities.reduce((sum, a) => sum + a.duration, 0));
-	let weekElevation = $derived(weekActivities.reduce((sum, a) => sum + a.elevation, 0));
-	let weekLoad = $derived(weekActivities.reduce((sum, a) => sum + (a.tss ?? calculateLoad(a, ftp)), 0));
-	let weekCalories = $derived(weekActivities.reduce((sum, a) => sum + a.calories, 0));
-	let weekAvgPower = $derived(
-		weekDuration > 0
-			? Math.round(weekActivities.reduce((sum, a) => sum + a.avgPower * a.duration, 0) / weekDuration)
-			: 0
-	);
+	let weekSummary = $derived.by(() => {
+		const acts = weekDays.flatMap(d => getActivitiesForDay(d));
+		let distance = 0, duration = 0, elevation = 0, load = 0, calories = 0, powerDuration = 0;
+		for (const a of acts) {
+			distance += a.distance;
+			duration += a.duration;
+			elevation += a.elevation;
+			load += a.tss ?? calculateLoad(a, ftp);
+			calories += a.calories;
+			powerDuration += a.avgPower * a.duration;
+		}
+		return {
+			activities: acts,
+			distance,
+			duration,
+			elevation,
+			load,
+			calories,
+			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0
+		};
+	});
 </script>
 
 <div class="space-y-4">
@@ -99,35 +83,35 @@
 	</div>
 
 	<!-- Weekly Summary (Top, Centered) -->
-	{#if weekActivities.length > 0}
+	{#if weekSummary.activities.length > 0}
 		<div class="flex justify-center">
 			<div class="flex items-center gap-6 text-sm bg-secondary/30 rounded-lg px-6 py-3">
 				<div>
-					<span class="font-semibold tabular-nums">{weekActivities.length}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.activities.length}</span>
 					<span class="text-muted-foreground ml-1">rides</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{formatDuration(weekDuration)}</span>
+					<span class="font-semibold tabular-nums">{formatDuration(weekSummary.duration)}</span>
 					<span class="text-muted-foreground ml-1">time</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{weekDistance.toFixed(1)}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.distance.toFixed(1)}</span>
 					<span class="text-muted-foreground ml-1">km</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{weekElevation.toLocaleString()}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.elevation.toLocaleString()}</span>
 					<span class="text-muted-foreground ml-1">m</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{weekLoad}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.load}</span>
 					<span class="text-muted-foreground ml-1">Load</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{weekCalories.toLocaleString()}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.calories.toLocaleString()}</span>
 					<span class="text-muted-foreground ml-1">kcal</span>
 				</div>
 				<div>
-					<span class="font-semibold tabular-nums">{weekAvgPower}</span>
+					<span class="font-semibold tabular-nums">{weekSummary.avgPower}</span>
 					<span class="text-muted-foreground ml-1">w avg</span>
 				</div>
 			</div>

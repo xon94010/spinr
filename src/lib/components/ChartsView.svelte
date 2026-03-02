@@ -43,7 +43,7 @@
 	<!-- Period Selector -->
 	<div class="flex justify-end">
 		<div class="flex items-center gap-1 bg-secondary/50 rounded-lg p-1">
-			{#each [['4w', '4 Weeks'], ['3m', '3 Months'], ['1y', '1 Year'], ['all', 'All Time']] as [value, label]}
+			{#each [['4w', '4 Weeks'], ['3m', '3 Months'], ['1y', '1 Year'], ['all', 'All Time']] as [value, label] (value)}
 				<button
 					onclick={() => period = value as Period}
 					class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {period === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"

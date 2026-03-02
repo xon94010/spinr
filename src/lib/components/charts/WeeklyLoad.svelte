@@ -109,7 +109,7 @@
 	{:else}
 		<svg viewBox="0 0 {width} {height}" class="w-full" style="height: 180px;">
 			<!-- Y-axis grid and labels -->
-			{#each [0, 0.25, 0.5, 0.75, 1] as pct}
+			{#each [0, 0.25, 0.5, 0.75, 1] as pct (pct)}
 				{@const y = padding.top + chartHeight * (1 - pct)}
 				{@const value = Math.round(maxLoad * pct)}
 				<line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" stroke-opacity="0.1" />
@@ -135,7 +135,7 @@
 			{/if}
 
 			<!-- Bars -->
-			{#each weeklyData as week, i}
+			{#each weeklyData as week, i (week.week)}
 				{@const barHeight = (week.load / maxLoad) * chartHeight}
 				{@const x = padding.left + barGap + i * (barWidth + barGap)}
 				{@const y = padding.top + chartHeight - barHeight}

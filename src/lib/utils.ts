@@ -122,3 +122,29 @@ export function getMaxHrFromActivities(activities: Activity[], fallback = 190): 
 	const maxHr = activities.reduce((max, a) => Math.max(max, a.maxHr ?? 0), 0);
 	return maxHr > 0 ? maxHr : fallback;
 }
+
+export function getWeekDays(weekOffset: number): Date[] {
+	const today = new Date();
+	const dayOfWeek = today.getDay();
+	const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+	const monday = new Date(today);
+	monday.setDate(today.getDate() + mondayOffset + (weekOffset * 7));
+	monday.setHours(0, 0, 0, 0);
+
+	const days: Date[] = [];
+	for (let i = 0; i < 7; i++) {
+		const day = new Date(monday);
+		day.setDate(monday.getDate() + i);
+		days.push(day);
+	}
+	return days;
+}
+
+export function getWeekNumber(date: Date): number {
+	const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const dayNum = d.getUTCDay() || 7;
+	d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+	return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}

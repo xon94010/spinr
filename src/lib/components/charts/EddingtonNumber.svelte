@@ -76,10 +76,6 @@
 		return padding.left + (distance / maxDistance) * chartWidth;
 	}
 
-	function getY(count: number): number {
-		return padding.top + chartHeight - (count / maxCount) * chartHeight;
-	}
-
 	let barWidth = $derived(Math.max(8, (chartWidth / eddingtonData.histogram.length) * 0.7));
 </script>
 
@@ -113,7 +109,7 @@
 	<!-- Histogram -->
 	<svg viewBox="0 0 {width} {height}" class="w-full" style="height: {height}px;">
 		<!-- Grid lines -->
-		{#each [0, 0.25, 0.5, 0.75, 1] as pct}
+		{#each [0, 0.25, 0.5, 0.75, 1] as pct (pct)}
 			{@const y = padding.top + chartHeight * (1 - pct)}
 			{@const value = Math.round(maxCount * pct)}
 			<line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" stroke-opacity="0.1" />
@@ -139,7 +135,7 @@
 		</text>
 
 		<!-- Bars -->
-		{#each eddingtonData.histogram as { distance, count }, i}
+		{#each eddingtonData.histogram as { distance, count } (distance)}
 			{@const x = getX(distance) - barWidth / 2}
 			{@const barHeight = (count / maxCount) * chartHeight}
 			{@const y = padding.top + chartHeight - barHeight}
@@ -155,7 +151,7 @@
 		{/each}
 
 		<!-- X-axis labels -->
-		{#each [0, 25, 50, 75, 100, 125, 150] as dist}
+		{#each [0, 25, 50, 75, 100, 125, 150] as dist (dist)}
 			{#if dist <= maxDistance}
 				<text x={getX(dist)} y={height - 8} text-anchor="middle" class="fill-muted-foreground text-[10px]">
 					{dist}
