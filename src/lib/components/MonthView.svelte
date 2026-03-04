@@ -70,6 +70,7 @@
 			.filter(d => d.isCurrentMonth)
 			.flatMap(d => getActivitiesForDay(d.date));
 		let distance = 0, duration = 0, elevation = 0, load = 0, calories = 0, powerDuration = 0;
+		const weights: number[] = [];
 		for (const a of acts) {
 			distance += a.distance;
 			duration += a.duration;
@@ -77,7 +78,9 @@
 			load += a.tss ?? calculateLoad(a, ftp);
 			calories += a.calories;
 			powerDuration += a.avgPower * a.duration;
+			if (a.weight) weights.push(a.weight);
 		}
+		const avgWeight = weights.length > 0 ? Math.round(weights.reduce((s, w) => s + w, 0) / weights.length * 10) / 10 : undefined;
 		return {
 			activities: acts,
 			distance,
@@ -85,7 +88,8 @@
 			elevation,
 			load,
 			calories,
-			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0
+			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0,
+			avgWeight
 		};
 	});
 </script>
@@ -145,6 +149,12 @@
 					<span class="font-semibold tabular-nums">{monthSummary.avgPower}</span>
 					<span class="text-muted-foreground ml-1">w avg</span>
 				</div>
+				{#if monthSummary.avgWeight}
+					<div>
+						<span class="font-semibold tabular-nums">{monthSummary.avgWeight}</span>
+						<span class="text-muted-foreground ml-1">kg</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}
@@ -170,6 +180,8 @@
 				{@const weekTotalElevation = weekActivitiesAll.reduce((sum, a) => sum + a.elevation, 0)}
 				{@const weekTotalLoad = weekActivitiesAll.reduce((sum, a) => sum + (a.tss ?? calculateLoad(a, ftp)), 0)}
 				{@const weekTotalCalories = weekActivitiesAll.reduce((sum, a) => sum + a.calories, 0)}
+				{@const weekWeights = weekActivitiesAll.filter(a => a.weight).map(a => a.weight!)}
+				{@const weekAvgWeight = weekWeights.length > 0 ? Math.round(weekWeights.reduce((s, w) => s + w, 0) / weekWeights.length * 10) / 10 : undefined}
 				{@const hasAnyCurrentMonth = weekDaysSlice.some(d => d.isCurrentMonth)}
 				{#if hasAnyCurrentMonth}
 					<tr class="border-b border-border align-top">
@@ -199,6 +211,12 @@
 									<span class="text-muted-foreground">kcal</span>
 									<span class="font-medium tabular-nums">{weekTotalCalories.toLocaleString()}</span>
 								</div>
+								{#if weekAvgWeight}
+									<div class="flex justify-between">
+										<span class="text-muted-foreground">Weight</span>
+										<span class="font-medium tabular-nums">{weekAvgWeight} kg</span>
+									</div>
+								{/if}
 							</div>
 						</td>
 

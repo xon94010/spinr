@@ -4,6 +4,7 @@
 	import FitnessChart from './charts/FitnessChart.svelte';
 	import CumulativeDistance from './charts/CumulativeDistance.svelte';
 	import EddingtonNumber from './charts/EddingtonNumber.svelte';
+	import WeightChart from './charts/WeightChart.svelte';
 	import ZoneBreakdown from './ZoneBreakdown.svelte';
 	import type { Activity } from '$lib/types';
 	import { aggregateZones, aggregateHrZones, getMaxHrFromActivities } from '$lib/utils';
@@ -86,6 +87,12 @@
 			<h3 class="text-sm font-medium mb-4">Eddington Number</h3>
 			<EddingtonNumber {activities} />
 		</div>
+	</div>
+
+	<!-- Weight Chart -->
+	<div class="bg-card rounded-lg border border-border p-4">
+		<h3 class="text-sm font-medium mb-4">Weight</h3>
+		<WeightChart activities={filteredActivities} />
 	</div>
 
 	<!-- Power & HR Zone Distribution -->

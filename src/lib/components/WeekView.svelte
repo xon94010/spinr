@@ -39,6 +39,7 @@
 	let weekSummary = $derived.by(() => {
 		const acts = weekDays.flatMap(d => getActivitiesForDay(d));
 		let distance = 0, duration = 0, elevation = 0, load = 0, calories = 0, powerDuration = 0;
+		const weights: number[] = [];
 		for (const a of acts) {
 			distance += a.distance;
 			duration += a.duration;
@@ -46,7 +47,9 @@
 			load += a.tss ?? calculateLoad(a, ftp);
 			calories += a.calories;
 			powerDuration += a.avgPower * a.duration;
+			if (a.weight) weights.push(a.weight);
 		}
+		const avgWeight = weights.length > 0 ? Math.round(weights.reduce((s, w) => s + w, 0) / weights.length * 10) / 10 : undefined;
 		return {
 			activities: acts,
 			distance,
@@ -54,7 +57,8 @@
 			elevation,
 			load,
 			calories,
-			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0
+			avgPower: duration > 0 ? Math.round(powerDuration / duration) : 0,
+			avgWeight
 		};
 	});
 </script>
@@ -114,6 +118,12 @@
 					<span class="font-semibold tabular-nums">{weekSummary.avgPower}</span>
 					<span class="text-muted-foreground ml-1">w avg</span>
 				</div>
+				{#if weekSummary.avgWeight}
+					<div>
+						<span class="font-semibold tabular-nums">{weekSummary.avgWeight}</span>
+						<span class="text-muted-foreground ml-1">kg</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}

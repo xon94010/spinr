@@ -39,6 +39,7 @@ export interface Activity {
 	work?: number;
 	tss?: number;
 	intensityFactor?: number;
+	weight?: number;
 }
 
 export interface ZoneConfig {

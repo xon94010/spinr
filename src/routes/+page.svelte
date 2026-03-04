@@ -207,6 +207,7 @@
 		elevationProfile: (a as Activity & { elevationProfile?: number[] }).elevationProfile,
 		timeInZones: (a as Activity & { timeInZones?: TimeInZones }).timeInZones,
 		timeInHrZones: (a as Activity & { timeInHrZones?: import('$lib/types').TimeInHrZones }).timeInHrZones,
+		weight: (a as Activity & { weight?: number }).weight,
 		route: (a as Activity & { world?: string }).world || ''
 	})));
 
