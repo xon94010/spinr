@@ -226,54 +226,65 @@ export async function getProfile(username: string, password: string): Promise<Pr
 		maxStreak: data.streaksMaxLength || 0
 	};
 }
-export async function getActivities(
-	username: string,
-	password: string,
-	limit = 50
-): Promise<Activity[]> {
-	const token = await getToken(username, password);
-	const profile = await getProfile(username, password);
+function mapRawActivity(a: RawActivity): Activity {
+	return {
+		id: a.id_str,
+		name: a.name || 'Zwift Ride',
+		date: new Date(a.startDate),
+		duration: Math.round((a.movingTimeInMs || 0) / 1000),
+		distance: Math.round((a.distanceInMeters || 0) / 100) / 10,
+		elevation: Math.round(a.totalElevation || 0),
+		avgPower: Math.round(a.avgWatts || 0),
+		calories: Math.round(a.calories || 0),
+		worldId: a.worldId,
+		world: a.worldId ? ZWIFT_WORLDS[a.worldId] : undefined,
+		avgHr: a.avgHeartRate ? Math.round(a.avgHeartRate) : undefined,
+		maxHr: a.maxHeartRate ? Math.round(a.maxHeartRate) : undefined,
+		maxPower: a.maxWatts ? Math.round(a.maxWatts) : undefined,
+		weight: a.playerWeight ? a.playerWeight / 1000 : undefined
+	};
+}
 
-	const response = await fetch(`${API_URL}/api/profiles/${profile.id}/activities?limit=${limit}`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-			Accept: 'application/json'
-		}
+async function fetchActivityPage(
+	profileId: number,
+	token: string,
+	before?: string
+): Promise<RawActivity[]> {
+	const url = before
+		? `${API_URL}/api/profiles/${profileId}/activities?limit=50&before=${encodeURIComponent(before)}`
+		: `${API_URL}/api/profiles/${profileId}/activities?limit=50`;
+
+	const response = await fetch(url, {
+		headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
 	});
 
 	if (!response.ok) {
 		throw new Error(`Failed to fetch activities: ${response.status}`);
 	}
 
-	const text = await response.text();
-	let data: RawActivity[];
+	return response.json();
+}
 
-	try {
-		data = JSON.parse(text);
-	} catch {
-		console.error('Activities response:', text.substring(0, 200));
-		throw new Error('Invalid activities response from Zwift');
+export async function getActivities(
+	username: string,
+	password: string
+): Promise<Activity[]> {
+	const token = await getToken(username, password);
+	const profile = await getProfile(username, password);
+
+	const allActivities: Activity[] = [];
+	let before: string | undefined;
+
+	while (true) {
+		const page = await fetchActivityPage(profile.id, token, before);
+		allActivities.push(...page.filter((a) => a.sport === 'CYCLING').map(mapRawActivity));
+
+		if (page.length < 50) break;
+		// Zwift's `before` param is a Unix timestamp in milliseconds (Java Long)
+		before = String(new Date(page[page.length - 1].startDate).getTime());
 	}
 
-
-	return data
-		.filter((a) => a.sport === 'CYCLING')
-		.map((a) => ({
-			id: a.id_str,
-			name: a.name || 'Zwift Ride',
-			date: new Date(a.startDate),
-			duration: Math.round((a.movingTimeInMs || 0) / 1000),
-			distance: Math.round((a.distanceInMeters || 0) / 100) / 10,
-			elevation: Math.round(a.totalElevation || 0),
-			avgPower: Math.round(a.avgWatts || 0),
-			calories: Math.round(a.calories || 0),
-			worldId: a.worldId,
-			world: a.worldId ? ZWIFT_WORLDS[a.worldId] : undefined,
-			avgHr: a.avgHeartRate ? Math.round(a.avgHeartRate) : undefined,
-			maxHr: a.maxHeartRate ? Math.round(a.maxHeartRate) : undefined,
-			maxPower: a.maxWatts ? Math.round(a.maxWatts) : undefined,
-			weight: a.playerWeight ? a.playerWeight / 1000 : undefined
-		}));
+	return allActivities;
 }
 
 export interface Stats {
@@ -596,7 +607,7 @@ export async function getStats(
 ): Promise<Stats> {
 	const [profile, activities] = await Promise.all([
 		getProfile(username, password),
-		getActivities(username, password, 50)
+		getActivities(username, password)
 	]);
 
 	const now = new Date();
